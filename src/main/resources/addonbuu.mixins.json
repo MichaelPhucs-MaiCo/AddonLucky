@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "maico.addonbuu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BuuMixin",
+    "TooltipSlotMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
