@@ -1,6 +1,5 @@
 package maico.addonbuu.hud;
 
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -21,6 +20,7 @@ public class ModHudRenderer {
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public static boolean showHistory = false; // Mặc định là ẩn cho đỡ chướng mắt nhé Mai Cồ
+    public static boolean showNotifications = true; // <--- CÔNG TẮC MỚI ĐÂY NÈ! 💡
 
     public static void init() {
         // Đăng ký vẽ HUD
@@ -76,7 +76,6 @@ public class ModHudRenderer {
         if (showHistory && !historyLog.isEmpty()) {
             int hX = 10;
             int hY = 10;
-            // Cập nhật tiêu đề hiển thị cả phím tắt xóa log luôn cho chuyên nghiệp
             context.drawText(renderer, Text.literal("§e§l--- LỊCH SỬ (▶: Ẩn | Del: Xóa) ---"), hX, hY, 0xFFFFFFFF, true);
             hY += 12;
 
@@ -87,8 +86,8 @@ public class ModHudRenderer {
             }
         }
 
-        // 2. VẼ THÔNG BÁO NỔI (Nâng cao lên height - 100 theo yêu cầu trước đó)
-        if (!activeNotifications.isEmpty()) {
+        // 2. VẼ THÔNG BÁO NỔI (Chỉ vẽ khi showNotifications = true)
+        if (showNotifications && !activeNotifications.isEmpty()) {
             int y = height - 100;
             for (int i = activeNotifications.size() - 1; i >= 0; i--) {
                 String msg = activeNotifications.get(i).text;

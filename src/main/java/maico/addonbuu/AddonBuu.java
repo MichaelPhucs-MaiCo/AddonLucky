@@ -1,6 +1,8 @@
 package maico.addonbuu;
 
+import maico.addonbuu.commands.LogCommand.AnLogCommand;
 import maico.addonbuu.commands.BuuCommand;
+import maico.addonbuu.commands.LogCommand.HienLogCommand;
 import maico.addonbuu.hud.BuuHud;
 import maico.addonbuu.hud.ModHudRenderer;
 import com.mojang.logging.LogUtils;
@@ -37,6 +39,9 @@ public class AddonBuu extends MeteorAddon {
 
         // Commands
         Commands.add(new BuuCommand());
+        Commands.add(new AnLogCommand());
+        Commands.add(new HienLogCommand());
+
 
         // HUD (Cái này là HUD chuẩn của Meteor)
         Hud.get().register(BuuHud.INFO);
