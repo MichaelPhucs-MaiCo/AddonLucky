@@ -24,7 +24,7 @@ public class TreoPhoBan extends Module {
     private final SettingGroup sgFarm = settings.createGroup("Cau hinh Farm");
 
     // --- ENUMS ---
-    public enum Area { Huyen_Anh_Bi_Canh_Slot9, Thi_Luyen_Dao_Trang_Slot18, Thien_Uyen_Cam_Dia_Slot27, Thanh_Vuc_Tu_Linh_Slot36 }
+    public enum Area { Huyen_Anh_Bi_Canh_Slot9, Thi_Luyen_Dao_Trang_Slot18, Thien_Uyen_Cam_Dia_Slot27, Thanh_Vuc_Tu_Linh_Slot36, Custom }
     public enum HuyenAnhDungeon { Sa_Mac_Hoa_Linh_Slot13, Bang_Cung_Tuyet_Dia_Slot14, Co_Mot_Huyet_Toc_Slot15, Hai_Vuc_Tham_Uyen_Slot16, Than_Moc_Lam_Slot21, Di_Gioi_Khong_Gian_Slot22, Chien_Truong_Thuong_Co_Slot24, Dong_Phu_Van_Quy_Slot25, Dam_Lay_An_Mon_Slot26, Hoang_Thanh_Tu_Chan_Slot29, Mo_Linh_Thach_Do_Hoang_Slot30, Phe_Tich_Than_Toc_Slot31, Song_Vong_Xuyen_Slot32, Phong_Bao_Hon_Nguyen_Slot33, Dinh_Con_Lon_Gia_Slot34, Custom }
     public enum ThiLuyenDungeon { Dao_Trang_Linh_Thach_Slot11, Dao_Trang_Khoang_Thach_Slot12, Dao_Trang_Vien_Ngoc_Slot20, Custom }
     public enum ThienUyenDungeon { Giang_Sinh_1_Slot11, Giang_Sinh_2_Slot12, Giang_Sinh_3_Slot13, Custom }
@@ -51,6 +51,15 @@ public class TreoPhoBan extends Module {
         .name("khu-vuc")
         .description("Chon khu vuc pho ban muon vao.")
         .defaultValue(Area.Huyen_Anh_Bi_Canh_Slot9)
+        .build()
+    );
+
+    private final Setting<Integer> customAreaSlot = sgGui.add(new IntSetting.Builder()
+        .name("custom-area-slot")
+        .description("Nhap slot id cho Khu Vuc neu chon che do Custom.")
+        .defaultValue(9)
+        .min(0)
+        .visible(() -> area.get() == Area.Custom)
         .build()
     );
 
@@ -285,8 +294,11 @@ public class TreoPhoBan extends Module {
     // --- HELPER METHODS ---
     private int getAreaSlotId() {
         return switch (area.get()) {
-            case Huyen_Anh_Bi_Canh_Slot9 -> 9; case Thi_Luyen_Dao_Trang_Slot18 -> 18;
-            case Thien_Uyen_Cam_Dia_Slot27 -> 27; case Thanh_Vuc_Tu_Linh_Slot36 -> 36;
+            case Huyen_Anh_Bi_Canh_Slot9 -> 9;
+            case Thi_Luyen_Dao_Trang_Slot18 -> 18;
+            case Thien_Uyen_Cam_Dia_Slot27 -> 27;
+            case Thanh_Vuc_Tu_Linh_Slot36 -> 36;
+            case Custom -> customAreaSlot.get();
         };
     }
 
@@ -297,15 +309,18 @@ public class TreoPhoBan extends Module {
                 case Hai_Vuc_Tham_Uyen_Slot16 -> 16; case Than_Moc_Lam_Slot21 -> 21; case Di_Gioi_Khong_Gian_Slot22 -> 22;
                 case Chien_Truong_Thuong_Co_Slot24 -> 24; case Dong_Phu_Van_Quy_Slot25 -> 25; case Dam_Lay_An_Mon_Slot26 -> 26;
                 case Hoang_Thanh_Tu_Chan_Slot29 -> 29; case Mo_Linh_Thach_Do_Hoang_Slot30 -> 30; case Phe_Tich_Than_Toc_Slot31 -> 31;
-                case Song_Vong_Xuyen_Slot32 -> 32; case Phong_Bao_Hon_Nguyen_Slot33 -> 33; case Dinh_Con_Lon_Gia_Slot34 -> 34; case Custom -> customDungeonSlot.get();
+                case Song_Vong_Xuyen_Slot32 -> 32; case Phong_Bao_Hon_Nguyen_Slot33 -> 33; case Dinh_Con_Lon_Gia_Slot34 -> 34;
+                case Custom -> customDungeonSlot.get();
             };
             case Thi_Luyen_Dao_Trang_Slot18 -> switch (thiLuyen.get()) {
-                case Dao_Trang_Linh_Thach_Slot11 -> 11; case Dao_Trang_Khoang_Thach_Slot12 -> 12; case Dao_Trang_Vien_Ngoc_Slot20 -> 20; case Custom -> customDungeonSlot.get();
+                case Dao_Trang_Linh_Thach_Slot11 -> 11; case Dao_Trang_Khoang_Thach_Slot12 -> 12; case Dao_Trang_Vien_Ngoc_Slot20 -> 20;
+                case Custom -> customDungeonSlot.get();
             };
             case Thien_Uyen_Cam_Dia_Slot27 -> switch (thienUyen.get()) {
-                case Giang_Sinh_1_Slot11 -> 11; case Giang_Sinh_2_Slot12 -> 12; case Giang_Sinh_3_Slot13 -> 13; case Custom -> customDungeonSlot.get();
+                case Giang_Sinh_1_Slot11 -> 11; case Giang_Sinh_2_Slot12 -> 12; case Giang_Sinh_3_Slot13 -> 13;
+                case Custom -> customDungeonSlot.get();
             };
-            case Thanh_Vuc_Tu_Linh_Slot36 -> customDungeonSlot.get();
+            case Thanh_Vuc_Tu_Linh_Slot36, Custom -> customDungeonSlot.get();
         };
     }
 
@@ -313,7 +328,7 @@ public class TreoPhoBan extends Module {
         if (area.get() == Area.Huyen_Anh_Bi_Canh_Slot9) return huyenAnh.get() == HuyenAnhDungeon.Custom;
         if (area.get() == Area.Thi_Luyen_Dao_Trang_Slot18) return thiLuyen.get() == ThiLuyenDungeon.Custom;
         if (area.get() == Area.Thien_Uyen_Cam_Dia_Slot27) return thienUyen.get() == ThienUyenDungeon.Custom;
-        return area.get() == Area.Thanh_Vuc_Tu_Linh_Slot36;
+        return area.get() == Area.Thanh_Vuc_Tu_Linh_Slot36 || area.get() == Area.Custom;
     }
 
     private void clickSlot(int slotId) {

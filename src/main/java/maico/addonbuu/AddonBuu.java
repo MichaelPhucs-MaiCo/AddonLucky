@@ -1,5 +1,6 @@
 package maico.addonbuu;
 
+import maico.addonbuu.commands.*;
 import maico.addonbuu.commands.LogCommand.AnLogCommand;
 import maico.addonbuu.commands.BuuCommand;
 import maico.addonbuu.commands.LogCommand.HienLogCommand;
@@ -23,6 +24,7 @@ public class AddonBuu extends MeteorAddon {
     public static final Category LUCKYVN = new Category("LuckyVN", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final HudGroup HUD_GROUP = new HudGroup("AddonBuu");
     public static final Logger LOG = LogUtils.getLogger();
+    public static boolean showComponents = false;
 
     @Override
     public void onInitialize() {
@@ -36,11 +38,14 @@ public class AddonBuu extends MeteorAddon {
 
         //Modules LuckyVN
         Modules.get().add(new TreoPhoBan());
+        Modules.get().add(new AutoEnableDanDuoc());
+        Modules.get().add(new TuCatDo());
 
         // Commands
         Commands.add(new BuuCommand());
         Commands.add(new AnLogCommand());
         Commands.add(new HienLogCommand());
+        Commands.add(new ComponentCommand());
 
 
         // HUD (Cái này là HUD chuẩn của Meteor)

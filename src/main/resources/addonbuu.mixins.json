@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BuuMixin",
-    "TooltipSlotMixin"
+    "TooltipSlotMixin",
+    "InfoComponent"
   ],
   "injectors": {
     "defaultRequire": 1
