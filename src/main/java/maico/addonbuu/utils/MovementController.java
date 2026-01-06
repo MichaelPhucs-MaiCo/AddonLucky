@@ -12,21 +12,26 @@ public class MovementController {
 
     public enum Mode { Baritone, WASD }
 
-    // Các Setting sẽ được khởi tạo thông qua constructor
     public final Setting<Mode> mode;
     public final Setting<String> baritoneTarget;
     public final Setting<List<String>> wasdCommands;
 
-    // Biến điều khiển WASD nội bộ
-    private int wasdIndex = 0;
-    private int wasdTickCounter = 0;
-    private int wasdPauseTimer = 0;
-    private boolean isActive = false;
+    public int wasdIndex = 0;
+    public int wasdTickCounter = 0;
+    public int wasdPauseTimer = 0;
+
+    // --- ĐÂY NÈ: Khai báo biến active để lưu trạng thái ---
+    private boolean active = false;
+
+    // Hàm này để các Module khác (như AutoWarp) gọi moveControl.isActive()
+    public boolean isActive() {
+        return active;
+    }
 
     public MovementController(SettingGroup group, String prefix) {
         mode = group.add(new EnumSetting.Builder<Mode>()
             .name(prefix + "-mode")
-            .description("Chon kieu di chuyen: Baritone (Thong minh) hoac WASD (Co dien).")
+            .description("Chon kieu di chuyen: Baritone hoac WASD.")
             .defaultValue(Mode.Baritone)
             .build()
         );
@@ -41,15 +46,16 @@ public class MovementController {
 
         wasdCommands = group.add(new StringListSetting.Builder()
             .name(prefix + "-wasd-list")
-            .description("Danh sach lenh WASD. VD: up 3s, down 2s, left 1s, right 1s.")
-            .defaultValue(List.of("up 2s", "left 1s"))
+            .description("Danh sach lenh WASD. VD: up 3s, delay 2s, left 1s.")
+            .defaultValue(List.of("up 2s", "delay 3s", "left 1s"))
             .visible(() -> mode.get() == Mode.WASD)
             .build()
         );
     }
 
     public void tick() {
-        if (!isActive || mc.player == null) return;
+        // Kiểm tra biến active
+        if (!active || mc.player == null) return;
 
         if (mode.get() == Mode.Baritone) {
             handleBaritone();
@@ -58,14 +64,14 @@ public class MovementController {
         }
     }
 
-    private void handleBaritone() {
+    public void handleBaritone() {
         BlockPos pos = parsePos(baritoneTarget.get());
         if (pos != null && !BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(pos));
         }
     }
 
-    private void handleWASD() {
+    public void handleWASD() {
         List<String> cmds = wasdCommands.get();
         if (wasdIndex >= cmds.size()) {
             stop();
@@ -84,10 +90,14 @@ public class MovementController {
             int duration = (int) (Double.parseDouble(parts[1].replace("s", "")) * 20);
 
             if (wasdTickCounter < duration) {
-                mc.options.forwardKey.setPressed(action.equals("up"));
-                mc.options.backKey.setPressed(action.equals("down"));
-                mc.options.leftKey.setPressed(action.equals("left"));
-                mc.options.rightKey.setPressed(action.equals("right"));
+                if (action.equals("delay")) {
+                    resetKeys();
+                } else {
+                    mc.options.forwardKey.setPressed(action.equals("up"));
+                    mc.options.backKey.setPressed(action.equals("down"));
+                    mc.options.leftKey.setPressed(action.equals("left"));
+                    mc.options.rightKey.setPressed(action.equals("right"));
+                }
                 wasdTickCounter++;
             } else {
                 resetKeys();
@@ -95,31 +105,36 @@ public class MovementController {
                 wasdIndex++;
                 wasdPauseTimer = 5;
             }
-        } catch (Exception e) { wasdIndex++; }
+        } catch (Exception e) {
+            resetKeys();
+            wasdIndex++;
+        }
     }
 
     public void start() {
-        isActive = true;
+        active = true; // Bật trạng thái
         wasdIndex = 0;
         wasdTickCounter = 0;
+        wasdPauseTimer = 0;
     }
 
     public void stop() {
-        isActive = false;
+        active = false; // Tắt trạng thái
         resetKeys();
         if (mode.get() == Mode.Baritone) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
     }
 
-    private void resetKeys() {
+    public void resetKeys() {
+        if (mc.options == null) return;
         mc.options.forwardKey.setPressed(false);
         mc.options.backKey.setPressed(false);
         mc.options.leftKey.setPressed(false);
         mc.options.rightKey.setPressed(false);
     }
 
-    private BlockPos parsePos(String s) {
+    public BlockPos parsePos(String s) {
         try {
             String[] p = s.split(" ");
             return new BlockPos(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]));
@@ -128,7 +143,7 @@ public class MovementController {
 }
 
 
-//Hướng dẫn sử dụng
+//Hướng dẫn sử dụng :))
 
 //public class ModuleMau extends Module {
 //    private final SettingGroup sgFarm = settings.createGroup("Cau hinh Movement");

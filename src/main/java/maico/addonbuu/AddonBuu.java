@@ -9,6 +9,8 @@ import maico.addonbuu.hud.ModHudRenderer;
 import com.mojang.logging.LogUtils;
 import maico.addonbuu.modules.TestLogModule;
 import maico.addonbuu.modules.auto_luckyvn.*;
+import maico.addonbuu.modules.logs.AnLog;
+import maico.addonbuu.utils.FileLogger;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
@@ -28,6 +30,8 @@ public class AddonBuu extends MeteorAddon {
 
     @Override
     public void onInitialize() {
+        FileLogger.init();
+
         LOG.info("Addon Buu đang khởi chạy... Sẵn sàng quẩy Minecraft! 🔥");
 
         // --- Khởi tạo Custom HUD Renderer ---
@@ -40,6 +44,10 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new TreoPhoBan());
         Modules.get().add(new AutoEnableDanDuoc());
         Modules.get().add(new TuCatDo());
+        Modules.get().add(new AutoWarp());
+
+        //Module Logs
+        Modules.get().add(new AnLog());
 
         // Commands
         Commands.add(new BuuCommand());
