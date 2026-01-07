@@ -3,9 +3,11 @@
   "package": "maico.addonbuu.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "BuuMixin",
     "TooltipSlotMixin",
-    "InfoComponent"
+    "InfoComponent",
+    "HandledScreenAccessor",
+    "GuiTitleMixin",
+    "ItemClickMixin"
   ],
   "injectors": {
     "defaultRequire": 1
