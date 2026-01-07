@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 public class AddonBuu extends MeteorAddon {
     public static final Category ADDONBUU = new Category("AddonBuu", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final Category LUCKYVN = new Category("LuckyVN", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
+    public static final Category CLICK_SLOT_CUSTOM = new Category("ClickSlotCustom", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final HudGroup HUD_GROUP = new HudGroup("AddonBuu");
     public static final Logger LOG = LogUtils.getLogger();
 
@@ -48,6 +49,8 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new TuCatDo());
         Modules.get().add(new AutoWarp());
         Modules.get().add(new SaveLogCheTao());
+        Modules.get().add(new CopyDataComp());
+        Modules.get().add(new AutoClickCustom());
 
         //Module Logs
         Modules.get().add(new AnLog());
@@ -68,6 +71,7 @@ public class AddonBuu extends MeteorAddon {
     public void onRegisterCategories() {
         Modules.registerCategory(ADDONBUU);
         Modules.registerCategory(LUCKYVN);
+        Modules.registerCategory(CLICK_SLOT_CUSTOM);
     }
 
     @Override
