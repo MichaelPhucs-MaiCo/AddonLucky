@@ -3,131 +3,148 @@
 
 ![Icon](src/main/resources/assets/addonbuu/icon.png)
 
-**AddonBuu** là một bản mở rộng (addon) "hàng thửa" dành riêng cho **Meteor Client** (Minecraft 1.21.4), được thiết kế tối ưu cho server **GrassMine** và các server sinh tồn khác.
+**AddonBuu** là một bản mở rộng (addon) "hàng thửa" dành riêng cho **Meteor Client** (Minecraft 1.21.4), được thiết kế tối ưu hóa tận răng cho server **GrassMine** và các server sinh tồn khác.
 
-> *"Va chạm cực mạnh, săn lùng kẻ thù, treo máy farm đồ - Tất cả trong một!"*
+> *"Auto từ A đến Á - Treo máy, săn boss, cày bí cảnh không lo bị cook!"*
 
 ---
 
 ## 📥 Cài đặt (Installation)
 
-1.  **Yêu cầu:**
-    * Minecraft **1.21.4**
-    * Fabric Loader
-    * [Meteor Client](https://meteorclient.com/) (Phiên bản mới nhất hỗ trợ 1.21.4)
-    * [Baritone](https://github.com/cabalitta/baritone) (Bắt buộc để chạy các module tự động di chuyển)
+1.  **Yêu cầu bắt buộc:**
+    * **Minecraft:** 1.21.4
+    * **Fabric Loader:** Phiên bản mới nhất.
+    * **Meteor Client:** Bản hỗ trợ 1.21.4 (Dev build hoặc Release).
+    * **Baritone:** (Bắt buộc) Để chạy các tính năng tự tìm đường.
 
 2.  **Cách cài:**
-    * Tải file `.jar` của AddonBuu (Build từ source hoặc tải release).
-    * Ném vào thư mục `.minecraft/mods`.
-    * Vào game và tận hưởng!
+    * Tải file `.jar` của AddonBuu (Release).
+    * Ném vào thư mục `%appdata%/.minecraft/mods`.
+    * Vào game, bật Meteor menu (thường là phím `Right Shift`) và quẩy thôi!
 
 ---
 
-## 🛠️ Tính năng chính (Modules)
+## 🧩 Danh sách Modules (Tính năng)
 
-Addon chia làm 2 Category chính: **GrassMine** (Dành cho server) và **AddonBuu** (Tiện ích chung).
+Addon chia làm các Category chính để anh em dễ tìm kiếm: **LuckyVN**, **AddonBuu**, **ClickSlotCustom**.
 
-### 🌾 Category: GrassMine
+### 🍀 Category: LuckyVN (Chuyên dụng cho Server)
 
-#### 1. ⚔️ Truy Sát Pro (`TruySatModule`)
-Hệ thống săn người tự động sử dụng Baritone.
-* **Chức năng:** Tự động đi tuần tra theo script, khi phát hiện kẻ thù trong **Blacklist** sẽ lao vào "múc" ngay lập tức.
-* **States:**
-    * `PATROLLING`: Đi tuần theo tọa độ cài sẵn.
-    * `HUNTING`: Phát hiện mục tiêu -> Dí theo.
-    * `RECOVERING`: Tự động hồi phục/quay lại sau khi chết.
-* **Lưu ý:** Cần cài đặt `Script` (các lệnh warp/goto) và `Blacklist` (tên kẻ thù) trong setting.
+#### 1. 🏯 Treo Phó Bản (`TreoPhoBan`)
+Module cày cuốc "trấn phái" của addon. Tự động đi phó bản không cần não.
+* **Chức năng:**
+    * Tự Warp đến `Linh Thú Viên`.
+    * Tự chạy vào cổng dịch chuyển.
+    * **Auto GUI:** Tự chọn khu vực (Huyễn Ảnh, Thí Luyện...) và Slot phó bản theo cấu hình.
+    * **Auto Cất đồ:** Tự chat `/tucatdo` khi vào game (tránh full rương).
+    * **Farm Mode:**
+        * `Baritone`: Tự tìm đường đến tọa độ định sẵn.
+        * `WASD`: Chạy theo kịch bản đi bộ (VD: đi thẳng 3s, rẽ trái 2s...).
+* **Cách dùng:** Chọn lại `Khu Vực` và `Phó Bản` trong setting module trước khi bật.
 
-#### 2. 🛡️ Buu Aura (`BuuAura`)
-KillAura phiên bản nâng cấp, thông minh hơn.
-* **Targeting:** Ưu tiên đánh người trong **Blacklist**.
-* **Anti-Bot:** Tự động bỏ qua các thực thể có tên bắt đầu bằng `CIT-` (Bot chống hack của server).
-* **Thông minh:**
-    * Tự động đổi vũ khí (Auto Switch) sang Rìu nếu đối thủ dùng Khiên.
-    * Chỉ đánh khi cầm vũ khí (tránh tay không đấm đá).
-    * Tạm dừng Baritone khi đang va chạm để tránh lỗi di chuyển.
+#### 2. 💊 Auto Enable Đan Dược (`AutoEnableDanDuoc`)
+Dành cho mấy ông hay quên bật đan dược.
+* **Cơ chế:** Tự động soi vào **Slot 19** trong GUI đan dược.
+* **Logic:** Đọc Lore item, nếu thấy chữ "trạng thái: tắt" -> Tự click để BẬT lên ngay lập tức.
+* **Lưu ý:** Phải mở GUI đan dược lên nó mới hoạt động nhé.
 
-#### 3. 🏯 Treo Phó Bản (`TreoPhoBan`)
-Module cày cuốc tự động xịn nhất hệ mặt trời.
-* **Hỗ trợ:** Huyễn Ảnh Bí Cảnh, Thí Luyện Đạo Tràng, Thiên Uyên Cấm Địa...
+#### 3. 📦 Tự Cất Đồ (`TuCatDo`)
+Không bao giờ lo rác rương.
+* **Cơ chế:** "Nghe lén" gói tin từ server.
+* **Logic:** Nếu server báo dòng "Tự động cất vật phẩm... [TẮT ❌]" -> Module sẽ tự động gửi lệnh `/tucatdo` để bật lại ngay.
+* **Delay:** Có delay 10s để tránh spam lệnh bị server kick.
+
+#### 4. 🚀 Auto Warp & Script (`AutoWarp`)
+Tool hỗ trợ chạy kịch bản đa năng.
 * **Tính năng:**
-    * Tự động Warp, tự nhảy vào cổng.
-    * Tự chọn Slot phó bản trong GUI (Config được slot).
-    * **Auto Cất Đồ:** Tự chat `/tucatdo` khi vào.
-    * **Mode Di Chuyển:** Hỗ trợ cả Baritone (tự tìm đường) và WASD (Script đi bộ: `up 3s`, `left 2s`...).
+    1.  **Check tọa độ:** Đứng đúng vị trí XYZ cài sẵn mới chạy.
+    2.  **Gửi lệnh:** Tự chat `/warp xxx` hoặc `/mine xxx`.
+    3.  **Smart Jump:** Tự động nhảy thông minh khi gặp vật cản (Logic nhìn trước 1.5 block).
+    4.  **Script WASD:** Sau khi warp xong sẽ chạy script đi bộ để vào bãi farm.
 
-#### 4. 🔄 Auto Return Multi (`AutoReturnMulti`)
-Tự động quay lại điểm farm và chạy kịch bản phức tạp.
-* Thích hợp cho việc farm ở nhiều điểm khác nhau (Multi-target).
-* Hỗ trợ vòng lặp (Loop) kịch bản vô tận.
-
-#### 5. 📍 Auto Return GrassMine (`AutoReturnGrassMine`)
-Phiên bản đơn giản hơn của Auto Return.
-* Tự Warp -> Đợi load map (có thanh kéo delay) -> Dùng Baritone chạy đến tọa độ cố định.
-* Có check Lobby (nếu bị văng ra Lobby sẽ tự warp lại).
-
-#### 6. 🔑 Auto Login Grass (`AutoLoginGrass`)
-Tự động đăng nhập và chọn server.
-* Tự điền mật khẩu `/login`.
-* Tự click Nether Star/Compass để mở menu server.
-* Tự chọn chế độ chơi (Click slot).
-* **Fix lỗi:** Tự phát hiện kẹt ở Spawn hoặc lỗi kết nối để login lại.
-
-#### 7. ⚖️ Auto Ân Xá (`AutoAnXa`)
-Dành cho mấy ông hay đi tù.
-* Tự động phát hiện khi nhân vật bị tele vào nhà tù.
-* Tự chat `/anxa` và click GUI để ra tù ngay lập tức (cần có lệnh bài/tiền nhé).
-* Có thống kê lịch sử số lần ra tù.
+#### 5. 📝 Save Log Chế Tạo (`SaveLogCheTao`)
+Dành cho dân cày đồ, thích khoe thành tích.
+* **Chức năng:** Tự động lưu lại các dòng thông báo chế tạo thành công vào file log riêng.
+* **Bộ lọc:** Chỉ lưu những item có từ khóa xịn (VD: `Linh Khí ⭐`, `Thần Binh`).
+* **File lưu:** Nằm trong `.minecraft/addonbuu/log_chetao/`.
 
 ---
 
-### 📦 Category: AddonBuu
+### 🖱️ Category: ClickSlotCustom & AddonBuu
 
-#### 1. 🧪 Test Log Module
-* Module dùng để test hệ thống thông báo HUD mới. Bật lên để xem màu mè hoa lá cành.
+#### 1. 📋 Copy Data Component (`CopyDataComp`)
+Công cụ hỗ trợ lấy ID vật phẩm siêu nhanh.
+* **Cách dùng:** Bật module -> Mở GUI -> Click chuột trái vào item bất kỳ.
+* **Kết quả:** Nó sẽ copy chuỗi định dạng `slot_id:{component_data}` vào Clipboard.
+* **Mục đích:** Dùng chuỗi này dán vào setting của module **AutoClickCustom**.
 
----
+#### 2. 🎯 Auto Click Custom (`AutoClickCustom`)
+Tự động nhặt đồ/mua đồ theo chỉ định.
+* **Cách dùng:** Paste chuỗi data lấy được từ `CopyDataComp` vào phần `Danh sách target`.
+* **Logic:** Khi mở GUI, nó quét toàn bộ slot. Nếu thấy item nào khớp Component -> Tự click mua/lấy ngay lập tức.
 
-## 🎨 Hệ thống HUD & Notification
-
-AddonBuu không sử dụng Chat spam kênh chat, mà sử dụng hệ thống **HUD Notification** riêng biệt cực đẹp.
-
-* **Thông báo nổi:** Hiện giữa màn hình và trôi dần lên.
-* **Lịch sử thông báo (History Log):** Lưu lại các hoạt động của tool.
-
-**Phím tắt (Shortcuts):**
-* `Ctrl` + `Shift` + `Mũi tên Phải (▶)`: Bật/Tắt bảng lịch sử log (cho đỡ chướng mắt).
-* `Ctrl` + `Shift` + `Delete`: Xóa sạch lịch sử log.
+#### 3. 🙈 Ẩn Log (`AnLog`)
+* Bật lên để ẩn toàn bộ thông báo nổi (HUD Notification) của AddonBuu cho đỡ rối mắt khi PvP.
 
 ---
 
-## 🔧 Mixins (Các tính năng ẩn)
+## 🖥️ Hệ thống Commands (Lệnh)
 
-1.  **Anti-CIT Bot (KillAuraMixin):**
-    * Can thiệp sâu vào KillAura của Meteor. Nếu thực thể có tên bắt đầu bằng `CIT-`, Aura sẽ **TUYỆT ĐỐI KHÔNG ĐÁNH**. Giúp tránh bị ban acc oan uổng.
+Gõ các lệnh này vào khung chat (dấu chấm `.` là prefix của Meteor):
 
-2.  **Tooltip Slot ID (TooltipSlotMixin):**
-    * Khi di chuột vào vật phẩm trong rương/túi đồ, nó sẽ hiện thêm dòng: `§aslot số X`.
-    * **Tác dụng:** Giúp bạn biết số slot để cài đặt cho module **Treo Phó Bản** hoặc **Auto Login** mà không cần đếm tay.
-
-3.  **Startup Log:**
-    * Khi game khởi động xong sẽ hiện log chào mừng của Mai Cồ.
-
----
-
-## 💻 Commands (Lệnh)
-
-* `.example`: Lệnh test cơ bản.
+* `.anlog`: Tắt thông báo nổi trên màn hình.
+* `.hienlog`: Bật lại thông báo nổi.
+* `.component hien`: Hiển thị chi tiết NBT/Component của item khi chỉ chuột vào (Soi đồ pro).
+* `.component an`: Tắt hiển thị component.
+* `.guititle`: Bật/Tắt tính năng tự động copy tiêu đề GUI khi mở (Tiện để lấy tên menu).
+* `.copy on`: Bật chế độ Click-to-Copy component (giống module `CopyDataComp` nhưng dùng lệnh).
+* `.copy off`: Tắt chế độ Click-to-Copy.
 
 ---
 
-## ⚠️ Lưu ý
+## 🔧 Mixins & Tính năng ẩn (Passive)
 
-* Script di chuyển của **Treo Phó Bản** (Mode WASD) có dạng: `hướng thời_gian`.
-    * Ví dụ: `up 3s` (đi thẳng 3 giây), `down 1.5s` (lùi 1.5 giây), `left 1s`, `right 1s`.
-* Để sử dụng tính năng **Auto Return**, hãy chắc chắn bạn đã cài đặt điểm warp (`/setwarp mine`) trong server.
+Đây là những tính năng chạy ngầm, hỗ trợ cực mạnh:
 
+1.  **Tooltip Slot ID:**
+    * Di chuột vào bất cứ item nào trong rương, bạn sẽ thấy dòng `§aslot số X`.
+    * Giúp bạn biết chính xác số slot để cài đặt cho `AutoClick` hoặc `TreoPhoBan`.
+
+2.  **GUI Title Copier:**
+    * Khi mở một GUI bất kỳ (Rương, Menu), addon sẽ tự động Copy tên của GUI đó vào Clipboard.
+
+3.  **Smart Logs:**
+    * Hệ thống log thông minh, tự động lưu file log theo ngày (`.minecraft/addonbuu/log/`).
+    * Tự kẻ vạch phân chia khi bước sang ngày mới (00:00) cho anh em treo máy xuyên đêm dễ check.
+
+---
+
+## 🎨 Hướng dẫn HUD Notification
+
+AddonBuu sử dụng hệ thống thông báo riêng, không spam kênh chat.
+
+* **Thông báo nổi:** Hiện giữa màn hình, trôi lên trên.
+* **Lịch sử (History Log):**
+    * Nhấn `Ctrl` + `Shift` + `Mũi tên Phải (▶)`: Để hiện/ẩn bảng lịch sử log bên góc trái.
+    * Nhấn `Ctrl` + `Shift` + `Delete`: Xóa sạch lịch sử log.
+
+---
+
+## 📝 Hướng dẫn viết Script WASD
+
+Trong các module như `TreoPhoBan` hay `AutoWarp`, phần Script WASD viết như sau:
+
+* **Cú pháp:** `hướng thời_gian`
+* **Các hướng:** `up` (đi tới), `down` (lùi), `left` (trái), `right` (phải), `delay` (đứng im).
+* **Đơn vị:** `s` (giây).
+
+**Ví dụ một script đi từ cổng dịch chuyển vào bãi quái:**
+```text
+up 3.5s    <- Đi thẳng 3.5 giây
+left 1s    <- Rẽ trái 1 giây
+up 2s      <- Đi thẳng tiếp 2 giây
+delay 1s   <- Nghỉ 1 giây cho đỡ lag
+right 0.5s <- Nhích phải tí xíu
 ---
 
 ### 📞 Liên hệ & Support
