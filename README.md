@@ -145,9 +145,10 @@ left 1s    <- Rẽ trái 1 giây
 up 2s      <- Đi thẳng tiếp 2 giây
 delay 1s   <- Nghỉ 1 giây cho đỡ lag
 right 0.5s <- Nhích phải tí xíu
----
+```
 
-### 📞 Liên hệ & Support
+
+## 📞 Liên hệ & Support
 * **Github:** [Maico/addonbuu](https://github.com/Maico/addonbuu)
 * **Tác giả:** MajinBuu2k4 (Mai Cồ)
 * **Donate:** *Gửi vài cái bánh mì là vui rồi :v*
