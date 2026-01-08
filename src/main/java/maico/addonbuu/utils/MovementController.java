@@ -2,9 +2,12 @@ package maico.addonbuu.utils;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
+import maico.addonbuu.utils.ChatUtils;
 import meteordevelopment.meteorclient.settings.*;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import java.util.List;
 
 public class MovementController {
@@ -15,15 +18,14 @@ public class MovementController {
     public final Setting<Mode> mode;
     public final Setting<String> baritoneTarget;
     public final Setting<List<String>> wasdCommands;
+    // --- SETTING MỚI ĐÂY ---
+    public final Setting<Boolean> autoJump;
 
     public int wasdIndex = 0;
     public int wasdTickCounter = 0;
     public int wasdPauseTimer = 0;
-
-    // --- ĐÂY NÈ: Khai báo biến active để lưu trạng thái ---
     private boolean active = false;
 
-    // Hàm này để các Module khác (như AutoWarp) gọi moveControl.isActive()
     public boolean isActive() {
         return active;
     }
@@ -51,11 +53,21 @@ public class MovementController {
             .visible(() -> mode.get() == Mode.WASD)
             .build()
         );
+
+        // Khởi tạo Setting Jump cho Controller
+        autoJump = group.add(new BoolSetting.Builder()
+            .name(prefix + "-smart-jump")
+            .description("Tu dong nhay thong minh khi gap vat can.")
+            .defaultValue(true)
+            .build()
+        );
     }
 
     public void tick() {
-        // Kiểm tra biến active
         if (!active || mc.player == null) return;
+
+        // --- TỰ ĐỘNG NHẢY KHI ĐANG DI CHUYỂN ---
+        handleSmartAutoJump();
 
         if (mode.get() == Mode.Baritone) {
             handleBaritone();
@@ -64,25 +76,46 @@ public class MovementController {
         }
     }
 
+    private void handleSmartAutoJump() {
+        if (!autoJump.get() || !mc.player.isOnGround() || mc.player.isSneaking()) return;
+
+        // Chỉ nhảy nếu đang có lệnh di chuyển (đang chạy script hoặc Baritone đang dắt đi)
+        boolean isMoving = mc.player.input.movementForward != 0 || mc.player.input.movementSideways != 0;
+        if (!isMoving) return;
+
+        // Thuật toán nhìn trước 1.5 block
+        Vec3d lookVec = Vec3d.fromPolar(0, mc.player.getYaw()).normalize();
+        BlockPos blockAheadFeet = BlockPos.ofFloored(mc.player.getPos().add(lookVec.multiply(1.5)).add(0, 0.2, 0));
+        BlockPos blockAheadHead = blockAheadFeet.up();
+
+        BlockState stateFeet = mc.world.getBlockState(blockAheadFeet);
+        BlockState stateHead = mc.world.getBlockState(blockAheadHead);
+
+        if (stateFeet.isSolidBlock(mc.world, blockAheadFeet) && !stateHead.isSolidBlock(mc.world, blockAheadHead)) {
+            mc.player.jump();
+        }
+    }
+
     public void handleBaritone() {
         BlockPos pos = parsePos(baritoneTarget.get());
-        if (pos != null && !BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
+        if (pos == null) { stop(); return; }
+
+        if (mc.player.getBlockPos().equals(pos)) {
+            ChatUtils.debug("§aĐã đến tọa độ Baritone! Dừng di chuyển. 🏁");
+            stop();
+            return;
+        }
+
+        if (!BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(pos));
         }
     }
 
     public void handleWASD() {
         List<String> cmds = wasdCommands.get();
-        if (wasdIndex >= cmds.size()) {
-            stop();
-            return;
-        }
+        if (wasdIndex >= cmds.size()) { stop(); return; }
 
-        if (wasdPauseTimer > 0) {
-            resetKeys();
-            wasdPauseTimer--;
-            return;
-        }
+        if (wasdPauseTimer > 0) { resetKeys(); wasdPauseTimer--; return; }
 
         try {
             String[] parts = cmds.get(wasdIndex).toLowerCase().split(" ");
@@ -105,21 +138,18 @@ public class MovementController {
                 wasdIndex++;
                 wasdPauseTimer = 5;
             }
-        } catch (Exception e) {
-            resetKeys();
-            wasdIndex++;
-        }
+        } catch (Exception e) { resetKeys(); wasdIndex++; }
     }
 
     public void start() {
-        active = true; // Bật trạng thái
+        active = true;
         wasdIndex = 0;
         wasdTickCounter = 0;
         wasdPauseTimer = 0;
     }
 
     public void stop() {
-        active = false; // Tắt trạng thái
+        active = false;
         resetKeys();
         if (mode.get() == Mode.Baritone) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();

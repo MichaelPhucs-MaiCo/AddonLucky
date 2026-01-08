@@ -7,12 +7,14 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 public class AutoWarp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgScript = settings.createGroup("Script WASD");
 
-    // --- ENUMS ---
     public enum CmdType { Warp, Mine }
 
     // --- SETTINGS ---
@@ -56,10 +58,16 @@ public class AutoWarp extends Module {
         .build()
     );
 
-    // Khai báo "động cơ" di chuyển
+    // Option Auto Jump giống Minecraft
+    private final Setting<Boolean> autoJump = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-jump")
+        .description("Tu dong nhay muot ma truoc khi va vao block (Smart Jump).")
+        .defaultValue(true)
+        .build()
+    );
+
     private final MovementController moveControl = new MovementController(sgScript, "script");
 
-    // --- LOGIC BIẾN ---
     private enum State { CHECKING, WAITING_DELAY, RUNNING_SCRIPT }
     private State currentState = State.CHECKING;
     private int timer = 0;
@@ -71,8 +79,7 @@ public class AutoWarp extends Module {
     @Override
     public void onActivate() {
         resetLogic();
-        moveControl.mode.set(MovementController.Mode.WASD);
-        ChatUtils.addModMessage("§aAutoWarp đã §a§lBẬT ✅🎯");
+        ChatUtils.info(this,"§aAutoWarp đã §a§lBẬT ✅🎯");
     }
 
     private void resetLogic() {
@@ -85,6 +92,9 @@ public class AutoWarp extends Module {
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
+        // --- LOGIC AUTO JUMP MỚI (Mượt hơn) ---
+        handleSmartAutoJump();
+
         switch (currentState) {
             case CHECKING -> {
                 if (timer > 0) {
@@ -93,13 +103,8 @@ public class AutoWarp extends Module {
                 }
 
                 if (isAtTarget()) {
-                    // 1. Xác định prefix cơ bản
                     String basePrefix = cmdType.get() == CmdType.Warp ? "/warp" : "/mine";
-
-                    // 2. Lấy tên lệnh và xóa khoảng trắng thừa
                     String name = commandName.get().trim();
-
-                    // 3. Logic "ảo ma": Nếu trống thì chỉ lấy prefix, nếu có chữ thì mới ghép thêm dấu cách và tên
                     String fullCmd = name.isEmpty() ? basePrefix : basePrefix + " " + name;
 
                     ChatUtils.addModMessage("§eĐã đúng tọa độ! Gửi lệnh: §f" + fullCmd);
@@ -108,7 +113,7 @@ public class AutoWarp extends Module {
                     currentState = State.WAITING_DELAY;
                     timer = postWarpDelay.get() * 20;
                 } else {
-                    timer = 100;
+                    timer = 20; // Check mỗi giây 1 lần cho đỡ lag nếu chưa tới đích
                 }
             }
 
@@ -124,8 +129,6 @@ public class AutoWarp extends Module {
 
             case RUNNING_SCRIPT -> {
                 moveControl.tick();
-
-                // Kiểm tra xem MovementController đã chạy xong list script chưa
                 if (!moveControl.isActive()) {
                     ChatUtils.addModMessage("§aScript kết thúc! Quay lại check tọa độ. 🔄");
                     currentState = State.CHECKING;
@@ -135,14 +138,41 @@ public class AutoWarp extends Module {
         }
     }
 
+    // --- HÀM XỬ LÝ NHẢY THÔNG MINH ---
+    private void handleSmartAutoJump() {
+        // 1. Kiểm tra điều kiện cơ bản: Đang bật, đang đứng trên đất, không phải đang lén nút Shift
+        if (!autoJump.get() || !mc.player.isOnGround() || mc.player.isSneaking()) return;
+
+        // 2. Kiểm tra xem người chơi có đang thực sự muốn di chuyển không (đang bấm nút đi)
+        if (mc.player.input.movementForward == 0 && mc.player.input.movementSideways == 0) return;
+
+        // 3. Tính toán vị trí "tương lai" ngay trước mặt (cách khoảng 0.8 block theo hướng nhìn)
+        // Lấy vector hướng nhìn, chuẩn hóa về độ dài 1, bỏ qua trục Y
+        Vec3d lookVec = Vec3d.fromPolar(0, mc.player.getYaw()).normalize();
+        // Điểm cần check cách chân người chơi 1.3 block về phía trước
+        BlockPos blockAheadFeet = BlockPos.ofFloored(mc.player.getPos().add(lookVec.multiply(1.5)).add(0, 0.1, 0));
+        BlockPos blockAheadHead = blockAheadFeet.up(); // Block ngay trên đầu cái block cản chân
+
+        // 4. Lấy trạng thái block
+        BlockState stateFeet = mc.world.getBlockState(blockAheadFeet);
+        BlockState stateHead = mc.world.getBlockState(blockAheadHead);
+
+        // 5. Logic quyết định nhảy:
+        // NẾU block phía trước chân là khối đặc (Solid) VÀ block phía trên đầu nó KHÔNG phải là khối đặc (thoáng)
+        // THÌ NHẢY!
+        if (stateFeet.isSolidBlock(mc.world, blockAheadFeet) && !stateHead.isSolidBlock(mc.world, blockAheadHead)) {
+            mc.player.jump();
+        }
+    }
+
+
     private boolean isAtTarget() {
         try {
             String[] p = targetCoords.get().split(" ");
             double tx = Double.parseDouble(p[0]);
             double ty = Double.parseDouble(p[1]);
             double tz = Double.parseDouble(p[2]);
-
-            double d = offset.get(); // Lấy độ sai lệch từ setting
+            double d = offset.get();
 
             return Math.abs(mc.player.getX() - tx) <= d &&
                 Math.abs(mc.player.getY() - ty) <= d &&
@@ -154,7 +184,7 @@ public class AutoWarp extends Module {
 
     @Override
     public void onDeactivate() {
-        ChatUtils.addModMessage("§aAutoWarp đã §4§lTẮT ❌");
+        ChatUtils.info(this, "§aAutoWarp đã §4§lTẮT ❌");
         moveControl.stop();
     }
 }

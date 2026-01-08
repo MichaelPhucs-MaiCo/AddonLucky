@@ -15,13 +15,13 @@ public class AnLog extends Module {
     public void onActivate() {
         // Tương đương với lệnh .anlog
         ModHudRenderer.showNotifications = false;
-        ChatUtils.addModMessage("§eĐã ẩn thông báo nổi!.");
+        ChatUtils.info(this,"§eĐã ẩn thông báo nổi!.");
     }
 
     @Override
     public void onDeactivate() {
         // Tương đương với lệnh .hienlog
         ModHudRenderer.showNotifications = true;
-        ChatUtils.addModMessage("§aĐã hiện lại thông báo nổi.");
+        ChatUtils.info(this,"§aĐã hiện lại thông báo nổi.");
     }
 }
