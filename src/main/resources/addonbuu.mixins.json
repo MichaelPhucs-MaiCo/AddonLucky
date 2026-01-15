@@ -8,7 +8,9 @@
     "HandledScreenAccessor",
     "GuiTitleMixin",
     "ItemClickMixin",
-    "CopyDataCompMixin"
+    "CopyDataCompMixin",
+    "slot_index.SlotIndexMixin",
+    "slot_index.SlotIndexButtonMixin"
   ],
   "injectors": {
     "defaultRequire": 1
