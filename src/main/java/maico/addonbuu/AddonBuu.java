@@ -10,6 +10,7 @@ import maico.addonbuu.modules.*;
 import maico.addonbuu.modules.TestLogModule;
 import maico.addonbuu.modules.auto_luckyvn.*;
 import maico.addonbuu.modules.logs.AnLog;
+import maico.addonbuu.modules.treo_pho_ban.*;
 import maico.addonbuu.utils.FileLogger;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 public class AddonBuu extends MeteorAddon {
     public static final Category ADDONBUU = new Category("AddonBuu", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final Category LUCKYVN = new Category("LuckyVN", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
+    public static final Category TREOPHOBAN = new Category("TreoPhoBan", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final Category CLICK_SLOT_CUSTOM = new Category("ClickSlotCustom", Items.POPPED_CHORUS_FRUIT.getDefaultStack());
     public static final HudGroup HUD_GROUP = new HudGroup("AddonBuu");
     public static final Logger LOG = LogUtils.getLogger();
@@ -54,6 +56,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new SaveLogCheTao());
         Modules.get().add(new CopyDataComp());
         Modules.get().add(new AutoClickCustom());
+        Modules.get().add(new ChongTreoPhoBan());
 
         //Module Logs
         Modules.get().add(new AnLog());
@@ -76,6 +79,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.registerCategory(ADDONBUU);
         Modules.registerCategory(LUCKYVN);
         Modules.registerCategory(CLICK_SLOT_CUSTOM);
+        Modules.registerCategory(TREOPHOBAN);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package maico.addonbuu.modules.auto_luckyvn;
+package maico.addonbuu.modules.treo_pho_ban;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
@@ -144,7 +144,7 @@ public class TreoPhoBan extends Module {
     private final Vec3d LOBBY_EXIT = new Vec3d(24, 64, -36);
     private final Vec3d SPAWN_LT = new Vec3d(28, 64, -37);
 
-    public TreoPhoBan() { super(AddonBuu.LUCKYVN, "treo-pho-ban", "Auto Treo Pho Ban🐾🚀"); }
+    public TreoPhoBan() { super(AddonBuu.TREOPHOBAN, "treo-pho-ban", "Auto Treo Pho Ban🐾🚀"); }
 
     @Override
     public void onActivate() {
@@ -195,7 +195,7 @@ public class TreoPhoBan extends Module {
             }
             case GOING_TO_PORTAL -> {
                 if (mc.options.forwardKey != null) mc.options.forwardKey.setPressed(true);
-                if (mc.player.getY() >= 65.0 && mc.player.isOnGround()) mc.player.jump();
+                if (mc.player.getY() >= 64.0 && mc.player.isOnGround()) mc.player.jump();
             }
             case SELECTING_AREA -> {
                 if (mc.currentScreen instanceof GenericContainerScreen && timer >= globalDelay.get()) {

@@ -17,6 +17,9 @@ public class AutoWarp extends Module {
 
     public enum CmdType { Warp, Mine }
 
+    // --- THÊM ENUM MỚI---
+    public enum WarpTarget { chetao, luyendan, Custom }
+
     // --- SETTINGS ---
     private final Setting<CmdType> cmdType = sgGeneral.add(new EnumSetting.Builder<CmdType>()
         .name("loai-lenh")
@@ -25,10 +28,20 @@ public class AutoWarp extends Module {
         .build()
     );
 
-    private final Setting<String> commandName = sgGeneral.add(new StringSetting.Builder()
+    // --- SỬA THÀNH ENUMSETTING ĐỂ CHỌN NHANH ---
+    private final Setting<WarpTarget> warpTarget = sgGeneral.add(new EnumSetting.Builder<WarpTarget>()
         .name("lenh")
-        .description("Ten warp hoac khu mine: chetao, luyendan,..")
+        .description("Chon ten warp hoac khu mine.")
+        .defaultValue(WarpTarget.chetao)
+        .build()
+    );
+
+    // --- Ô NHẬP TAY (CHỈ HIỆN KHI CHỌN CUSTOM) ---
+    private final Setting<String> customWarpName = sgGeneral.add(new StringSetting.Builder()
+        .name("custom-lenh")
+        .description("Nhap ten lenh neu chon Custom.")
         .defaultValue("chetao")
+        .visible(() -> warpTarget.get() == WarpTarget.Custom)
         .build()
     );
 
@@ -58,7 +71,6 @@ public class AutoWarp extends Module {
         .build()
     );
 
-    // Option Auto Jump giống Minecraft
     private final Setting<Boolean> autoJump = sgGeneral.add(new BoolSetting.Builder()
         .name("auto-jump")
         .description("Tu dong nhay muot ma truoc khi va vao block (Smart Jump).")
@@ -92,7 +104,6 @@ public class AutoWarp extends Module {
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
-        // --- LOGIC AUTO JUMP MỚI (Mượt hơn) ---
         handleSmartAutoJump();
 
         switch (currentState) {
@@ -104,8 +115,10 @@ public class AutoWarp extends Module {
 
                 if (isAtTarget()) {
                     String basePrefix = cmdType.get() == CmdType.Warp ? "/warp" : "/mine";
-                    String name = commandName.get().trim();
-                    String fullCmd = name.isEmpty() ? basePrefix : basePrefix + " " + name;
+
+                    // --- LOGIC LẤY TÊN LỆNH MỚI ---
+                    String name = (warpTarget.get() == WarpTarget.Custom) ? customWarpName.get() : warpTarget.get().name();
+                    String fullCmd = name.trim().isEmpty() ? basePrefix : basePrefix + " " + name.trim();
 
                     ChatUtils.addModMessage("§eĐã đúng tọa độ! Gửi lệnh: §f" + fullCmd);
                     ChatUtils.sendPlayerMsg(fullCmd);
@@ -113,7 +126,7 @@ public class AutoWarp extends Module {
                     currentState = State.WAITING_DELAY;
                     timer = postWarpDelay.get() * 20;
                 } else {
-                    timer = 20; // Check mỗi giây 1 lần cho đỡ lag nếu chưa tới đích
+                    timer = 20;
                 }
             }
 
@@ -138,33 +151,21 @@ public class AutoWarp extends Module {
         }
     }
 
-    // --- HÀM XỬ LÝ NHẢY THÔNG MINH ---
     private void handleSmartAutoJump() {
-        // 1. Kiểm tra điều kiện cơ bản: Đang bật, đang đứng trên đất, không phải đang lén nút Shift
         if (!autoJump.get() || !mc.player.isOnGround() || mc.player.isSneaking()) return;
-
-        // 2. Kiểm tra xem người chơi có đang thực sự muốn di chuyển không (đang bấm nút đi)
         if (mc.player.input.movementForward == 0 && mc.player.input.movementSideways == 0) return;
 
-        // 3. Tính toán vị trí "tương lai" ngay trước mặt (cách khoảng 0.8 block theo hướng nhìn)
-        // Lấy vector hướng nhìn, chuẩn hóa về độ dài 1, bỏ qua trục Y
         Vec3d lookVec = Vec3d.fromPolar(0, mc.player.getYaw()).normalize();
-        // Điểm cần check cách chân người chơi 1.3 block về phía trước
         BlockPos blockAheadFeet = BlockPos.ofFloored(mc.player.getPos().add(lookVec.multiply(1.5)).add(0, 0.1, 0));
-        BlockPos blockAheadHead = blockAheadFeet.up(); // Block ngay trên đầu cái block cản chân
+        BlockPos blockAheadHead = blockAheadFeet.up();
 
-        // 4. Lấy trạng thái block
         BlockState stateFeet = mc.world.getBlockState(blockAheadFeet);
         BlockState stateHead = mc.world.getBlockState(blockAheadHead);
 
-        // 5. Logic quyết định nhảy:
-        // NẾU block phía trước chân là khối đặc (Solid) VÀ block phía trên đầu nó KHÔNG phải là khối đặc (thoáng)
-        // THÌ NHẢY!
         if (stateFeet.isSolidBlock(mc.world, blockAheadFeet) && !stateHead.isSolidBlock(mc.world, blockAheadHead)) {
             mc.player.jump();
         }
     }
-
 
     private boolean isAtTarget() {
         try {
