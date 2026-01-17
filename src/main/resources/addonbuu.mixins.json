@@ -10,7 +10,10 @@
     "ItemClickMixin",
     "CopyDataCompMixin",
     "slot_index.SlotIndexMixin",
-    "slot_index.SlotIndexButtonMixin"
+    "slot_index.SlotIndexButtonMixin",
+    "show_tt_pet.ShowPetInfoButtonMixin",
+    "show_tt_pet.PetInfoRenderMixin",
+    "check_gui.CheckGuiMixin"
   ],
   "injectors": {
     "defaultRequire": 1

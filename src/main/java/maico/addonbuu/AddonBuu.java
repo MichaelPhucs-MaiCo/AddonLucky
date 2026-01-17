@@ -3,6 +3,7 @@ package maico.addonbuu;
 import maico.addonbuu.commands.*;
 import maico.addonbuu.commands.LogCommand.AnLogCommand;
 import maico.addonbuu.commands.LogCommand.HienLogCommand;
+import maico.addonbuu.commands.check_gui.CheckGuiCommand;
 import maico.addonbuu.hud.BuuHud;
 import maico.addonbuu.hud.ModHudRenderer;
 import com.mojang.logging.LogUtils;
@@ -33,7 +34,9 @@ public class AddonBuu extends MeteorAddon {
     public static boolean showComponents = false;
     public static boolean showGuiTitle = false; //in title cửa sổ ra log
     public static boolean itemClickCopy = false; //copy component item
-    public static boolean showSlotIndex = false;
+    public static boolean showSlotIndex = false; //show index ngay trong inv
+    public static boolean showPetInfo = false; //show thông tin pet khi roll
+    public static boolean showCheckGui = false; //check tile gui
 
     @Override
     public void onInitialize() {
@@ -68,6 +71,7 @@ public class AddonBuu extends MeteorAddon {
         Commands.add(new GuiTitleCommand());
         Commands.add(new ItemCopyCommand());
         Commands.add(new SlotIndexCommand());
+        Commands.add(new CheckGuiCommand());
 
 
         // HUD (Cái này là HUD chuẩn của Meteor)
