@@ -41,6 +41,7 @@ public class AddonBuu extends MeteorAddon {
     @Override
     public void onInitialize() {
         FileLogger.init();
+        maico.addonbuu.utils.quick_access_server.LobbyManager.load();
 
         LOG.info("Addon Buu đang khởi chạy... Sẵn sàng quẩy Minecraft! 🔥");
 

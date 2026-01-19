@@ -7,13 +7,20 @@
     "InfoComponent",
     "HandledScreenAccessor",
     "GuiTitleMixin",
+
     "ItemClickMixin",
     "CopyDataCompMixin",
+
     "slot_index.SlotIndexMixin",
     "slot_index.SlotIndexButtonMixin",
     "show_tt_pet.ShowPetInfoButtonMixin",
     "show_tt_pet.PetInfoRenderMixin",
-    "check_gui.CheckGuiMixin"
+
+    "check_gui.CheckGuiMixin",
+
+    "quick_access_server.ServerEntryMixin",
+    "quick_access_server.MultiplayerScreenMixin",
+    "quick_access_server.TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
