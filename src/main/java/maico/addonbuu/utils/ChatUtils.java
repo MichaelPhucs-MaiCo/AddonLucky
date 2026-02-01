@@ -101,4 +101,8 @@ public class ChatUtils {
         ModHudRenderer.addNotification(fullMsg);
         FileLogger.log(fullMsg);
     }
+
+    public static void error(String message) {
+        addErrorMessage(message);
+    }
 }

@@ -8,37 +8,40 @@ import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList; // Sử dụng cái này cho an toàn luồng
 
 public class ModHudRenderer {
-    private static final List<Notification> activeNotifications = new ArrayList<>();
-    private static final List<Notification> historyLog = new ArrayList<>();
+    // Thay đổi ArrayList thành CopyOnWriteArrayList để tránh NullPointerException khi render
+    private static final List<Notification> activeNotifications = new CopyOnWriteArrayList<>();
+    private static final List<Notification> historyLog = new CopyOnWriteArrayList<>();
 
-    private static final int DISPLAY_TIME = 5000; // 5 giây cho thông báo nổi
-    private static final long HISTORY_EXPIRE = 10 * 60 * 1000; // 10 phút tự xóa
+    private static final int DISPLAY_TIME = 5000;
+    private static final long HISTORY_EXPIRE = 10 * 60 * 1000;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public static boolean showHistory = false; // Mặc định là ẩn cho đỡ chướng mắt nhé Mai Cồ
-    public static boolean showNotifications = true; // <--- CÔNG TẮC MỚI ĐÂY NÈ! 💡
+    public static boolean showHistory = false;
+    public static boolean showNotifications = true;
 
     public static void init() {
-        // Đăng ký vẽ HUD
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
             render(drawContext);
         });
     }
 
     public static void addNotification(String text) {
+        if (text == null) return; // Bảo vệ đầu vào
+
         long now = System.currentTimeMillis();
         String timeStr = "[" + LocalTime.now().format(TIME_FORMAT) + "] ";
         Notification n = new Notification(text, timeStr, now);
+
         activeNotifications.add(n);
         historyLog.add(n);
 
-        // Giới hạn số lượng hiển thị để không tràn màn hình
-        if (historyLog.size() > 20) historyLog.remove(0);
-        if (activeNotifications.size() > 5) activeNotifications.remove(0);
+        // Giới hạn số lượng (vẫn an toàn với CopyOnWriteArrayList)
+        while (historyLog.size() > 20) historyLog.remove(0);
+        while (activeNotifications.size() > 5) activeNotifications.remove(0);
     }
 
     private static void render(DrawContext context) {
@@ -49,13 +52,11 @@ public class ModHudRenderer {
         boolean isCtrlPressed = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
         boolean isShiftPressed = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
 
-        // --- 1. XỬ LÝ PHÍM TẮT: Ctrl + Shift + Right Arrow (Bật/Tắt Lịch sử) ---
         if (isCtrlPressed && isShiftPressed && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT) == GLFW.GLFW_PRESS) {
             showHistory = !showHistory;
             try { Thread.sleep(200); } catch (Exception ignored) {}
         }
 
-        // --- 2. XỬ LÝ PHÍM TẮT: Ctrl + Shift + Delete (Xóa sạch Lịch sử) 🧹 ---
         if (isCtrlPressed && isShiftPressed && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_DELETE) == GLFW.GLFW_PRESS) {
             historyLog.clear();
             activeNotifications.clear();
@@ -68,11 +69,10 @@ public class ModHudRenderer {
         int height = context.getScaledWindowHeight();
         long now = System.currentTimeMillis();
 
-        // TỰ ĐỘNG XÓA LOG SAU 10 PHÚT
-        activeNotifications.removeIf(n -> now > n.startTime + DISPLAY_TIME);
-        historyLog.removeIf(n -> now > n.startTime + HISTORY_EXPIRE);
+        // Thêm kiểm tra n != null cho chắc cú 100%
+        activeNotifications.removeIf(n -> n == null || now > n.startTime + DISPLAY_TIME);
+        historyLog.removeIf(n -> n == null || now > n.startTime + HISTORY_EXPIRE);
 
-        // 1. VẼ LỊCH SỬ (Chỉ hiện khi showHistory = true)
         if (showHistory && !historyLog.isEmpty()) {
             int hX = 10;
             int hY = 10;
@@ -80,17 +80,20 @@ public class ModHudRenderer {
             hY += 12;
 
             for (Notification n : historyLog) {
+                if (n == null) continue;
                 String fullMsg = "§7" + n.timestamp + "§f" + n.text;
                 context.drawText(renderer, Text.literal(fullMsg), hX, hY, 0xFFFFFFFF, true);
                 hY += 10;
             }
         }
 
-        // 2. VẼ THÔNG BÁO NỔI (Chỉ vẽ khi showNotifications = true)
         if (showNotifications && !activeNotifications.isEmpty()) {
             int y = height - 100;
             for (int i = activeNotifications.size() - 1; i >= 0; i--) {
-                String msg = activeNotifications.get(i).text;
+                Notification n = activeNotifications.get(i);
+                if (n == null) continue;
+
+                String msg = n.text;
                 int textWidth = renderer.getWidth(msg);
                 int x = (width - textWidth) / 2;
                 context.fill(x - 4, y - 2, x + textWidth + 4, y + 10, 0x80000000);

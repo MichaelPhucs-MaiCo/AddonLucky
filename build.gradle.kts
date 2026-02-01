@@ -17,6 +17,10 @@ repositories {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
+    //maven {
+        //name = "owo-lib"
+        //url = uri("https://maven.wispforest.io/releases/")
+    //}
 }
 
 dependencies {
@@ -34,6 +38,12 @@ dependencies {
 
     // Baritone (https://github.com/MeteorDevelopment/baritone)
     modCompileOnly("meteordevelopment:baritone:${properties["baritone_version"] as String}-SNAPSHOT")
+
+    // oωo-lib (Hỗ trợ làm UI hiện đại, bo góc mượt mà)
+    //modImplementation("io.wispforest:owo-lib:${properties["owo_version"] as String}")
+    // Nếu muốn đóng gói owo-lib vào luôn file jar của mod (JiJ)
+    // để người dùng không cần cài thêm mod owo-lib riêng lẻ:
+    //include("io.wispforest:owo-lib:${properties["owo_version"] as String}")
 }
 
 loom {
