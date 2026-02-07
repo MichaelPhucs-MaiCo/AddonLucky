@@ -20,7 +20,9 @@
 
     "quick_access_server.ServerEntryMixin",
     "quick_access_server.MultiplayerScreenMixin",
-    "quick_access_server.TitleScreenMixin"
+    "quick_access_server.TitleScreenMixin",
+
+    "SaveTargetMixin"
   ],
   "injectors": {
     "defaultRequire": 1

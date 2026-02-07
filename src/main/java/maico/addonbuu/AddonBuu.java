@@ -7,6 +7,7 @@ import maico.addonbuu.commands.check_gui.CheckGuiCommand;
 
 import maico.addonbuu.hud.BuuHud;
 import maico.addonbuu.hud.ModHudRenderer;
+import maico.addonbuu.hud.SaveTargetHud;
 
 import com.mojang.logging.LogUtils;
 import maico.addonbuu.modules.*;
@@ -63,12 +64,14 @@ public class AddonBuu extends MeteorAddon {
 // -------------------------------------------------------
 
         ModHudRenderer.init();
+        SaveTargetHud.init();
 
         // Modules AddonBuu
         Modules.get().add(new TestLogModule());
         Modules.get().add(new SlotIndex());
         Modules.get().add(new TestHud());
         Modules.get().add(new SavePos());
+        Modules.get().add(new SaveTarget());
 
         // Modules LuckyVN
         Modules.get().add(new TreoPhoBan());
@@ -86,6 +89,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new NukerFP());
         Modules.get().add(new AutoWarpFP());
         Modules.get().add(new SpamScriptFP());
+        Modules.get().add(new CheckNukerFP());
 
         // Module Logs
         Modules.get().add(new AnLog());
