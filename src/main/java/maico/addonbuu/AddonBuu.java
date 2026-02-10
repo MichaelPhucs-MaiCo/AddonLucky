@@ -14,14 +14,16 @@ import maico.addonbuu.modules.*;
 import maico.addonbuu.modules.FairyPrion.*;
 import maico.addonbuu.modules.TestLogModule;
 import maico.addonbuu.modules.auto_luckyvn.*;
+import maico.addonbuu.modules.autofish.*;
 import maico.addonbuu.modules.logs.AnLog;
 import maico.addonbuu.modules.treo_pho_ban.*;
 import maico.addonbuu.utils.FileLogger;
 
 // --- Thêm các import này để xử lý GUI ---
 import maico.addonbuu.settings.StringAreaSetting;
+import maico.addonbuu.utils.quick_access_server.LobbyManager;
 import meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory;
-// ----------------------------------------
+// ---------------------------------------
 
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -52,16 +54,16 @@ public class AddonBuu extends MeteorAddon {
     @Override
     public void onInitialize() {
         FileLogger.init();
-        maico.addonbuu.utils.quick_access_server.LobbyManager.load();
+        LobbyManager.load();
+        maico.addonbuu.utils.quick_access_server.BridgeProtocolHandler.initializeBridge();
 
-        LOG.info("Addon Buu đang khởi chạy... Sẵn sàng quẩy Minecraft! 🔥");
+        LOG.info("Addon Buu đang khởi chạy...🔥");
 
         // --- ĐĂNG KÝ STRING AREA SETTING VÀO HỆ THỐNG METEOR ---
         // Dòng này cực kỳ quan trọng để Meteor biết cách vẽ cái box của cậu
         SettingsWidgetFactory.registerCustomFactory(StringAreaSetting.class, (theme) -> (table, setting) -> {
             StringAreaSetting.fillTable(theme, table, (StringAreaSetting) setting);
         });
-// -------------------------------------------------------
 
         ModHudRenderer.init();
         SaveTargetHud.init();
@@ -72,6 +74,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new TestHud());
         Modules.get().add(new SavePos());
         Modules.get().add(new SaveTarget());
+        Modules.get().add(new AutoFish());
 
         // Modules LuckyVN
         Modules.get().add(new TreoPhoBan());
@@ -90,6 +93,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new AutoWarpFP());
         Modules.get().add(new SpamScriptFP());
         Modules.get().add(new CheckNukerFP());
+        Modules.get().add(new FarmMineFP());
 
         // Module Logs
         Modules.get().add(new AnLog());

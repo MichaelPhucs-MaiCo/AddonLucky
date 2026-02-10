@@ -22,13 +22,6 @@ public class AutoWarpFP extends Module {
 
     public enum MineArea {
         Mine_A("2:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_B("3:{minecraft:custom_name=>empty[siblings=[literal{Khu vực }"),
-        Mine_C("4:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_D("5:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_E("6:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_F("10:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_G("11:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
-        Mine_H("12:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Mine_I("13:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Mine_J("14:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Mine_K("15:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
@@ -47,6 +40,13 @@ public class AutoWarpFP extends Module {
         Mine_X("32:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Mine_Y("33:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Mine_Z("34:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS1("37:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS2("38:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS3("39:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS4("40:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS5("41:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS6("42:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
+        Mine_CS7("43:{minecraft:custom_name=>empty[siblings=[literal{Khu vực: }"),
         Custom("");
 
         public final String data;
@@ -139,6 +139,14 @@ public class AutoWarpFP extends Module {
         .build()
     );
 
+    // Cài đặt mới để bật FarmMineFP
+    private final Setting<Boolean> enableFarmMineFP = sgPostScript.add(new BoolSetting.Builder()
+        .name("bat-FarmMineFP")
+        .description("Tự động kích hoạt module FarmMineFP sau khi kết thúc Script WASD.")
+        .defaultValue(true)
+        .build()
+    );
+
     private final MovementController moveControl = new MovementController(sgScript, "script");
 
     private enum State { CHECKING, WAITING_GUI, WAITING_BEFORE_CLICK, WAITING_POST_CLICK, RUNNING_SCRIPT }
@@ -223,7 +231,6 @@ public class AutoWarpFP extends Module {
                 ItemStack stack = handler.getSlot(slotId).getStack();
                 if (stack.isEmpty()) return -1;
 
-                // So sánh trực tiếp chuỗi component không cần matchLength
                 String fullComp = stack.getComponents().toString();
                 if (fullComp.contains(targetComp)) return slotId;
             }
@@ -250,6 +257,10 @@ public class AutoWarpFP extends Module {
         toggleModuleState(AutoSellFP.class, enableAutoSell.get());
         toggleModuleState(NukerFP.class, enableNukerFP.get());
         toggleModuleState(Nuker.class, enableNukerVanilla.get());
+
+        // Kích hoạt FarmMineFP nếu tùy chọn được bật
+        toggleModuleState(FarmMineFP.class, enableFarmMineFP.get());
+
         currentState = State.CHECKING;
     }
 
