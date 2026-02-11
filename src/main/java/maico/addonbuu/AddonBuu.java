@@ -55,12 +55,13 @@ public class AddonBuu extends MeteorAddon {
     public void onInitialize() {
         FileLogger.init();
         LobbyManager.load();
-        maico.addonbuu.utils.quick_access_server.BridgeProtocolHandler.initializeBridge();
+
 
         LOG.info("Addon Buu đang khởi chạy...🔥");
 
         // --- ĐĂNG KÝ STRING AREA SETTING VÀO HỆ THỐNG METEOR ---
         // Dòng này cực kỳ quan trọng để Meteor biết cách vẽ cái box của cậu
+        maico.addonbuu.utils.quick_access_server.service.LobbyServiceSync.startService();
         SettingsWidgetFactory.registerCustomFactory(StringAreaSetting.class, (theme) -> (table, setting) -> {
             StringAreaSetting.fillTable(theme, table, (StringAreaSetting) setting);
         });
@@ -94,6 +95,7 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new SpamScriptFP());
         Modules.get().add(new CheckNukerFP());
         Modules.get().add(new FarmMineFP());
+        Modules.get().add(new CheckDungIm());
 
         // Module Logs
         Modules.get().add(new AnLog());
