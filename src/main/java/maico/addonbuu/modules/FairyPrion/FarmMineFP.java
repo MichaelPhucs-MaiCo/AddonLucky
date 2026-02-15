@@ -11,11 +11,13 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.player.AutoEat;
 import meteordevelopment.meteorclient.systems.modules.world.Nuker;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.item.PickaxeItem;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
 
@@ -26,13 +28,13 @@ public class FarmMineFP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgScript = settings.createGroup("Kịch bản Script");
     private final SettingGroup sgMining = settings.createGroup("Cấu hình Đào & Về");
-    private final SettingGroup sgAutoSell = settings.createGroup("Cấu hình Tự động bán"); // Group mới
+    private final SettingGroup sgAutoSell = settings.createGroup("Cấu hình Tự động bán");
+    private final SettingGroup sgAutoEat = settings.createGroup("Tự động ăn"); // Group mới nè
     private final SettingGroup sgSafety = settings.createGroup("An toàn");
 
     // --- GENERAL ---
     private final Setting<List<Block>> whitelist = sgGeneral.add(new BlockListSetting.Builder()
         .name("whitelist-block")
-        .description("Danh sách block quặng để kiểm tra.")
         .defaultValue(Collections.emptyList())
         .build()
     );
@@ -40,7 +42,6 @@ public class FarmMineFP extends Module {
     public enum NukerMode { NukerFP, NukerGoc }
     private final Setting<NukerMode> nukerMode = sgGeneral.add(new EnumSetting.Builder<NukerMode>()
         .name("loai-nuker")
-        .description("Chọn module Nuker sẽ bật khi đào.")
         .defaultValue(NukerMode.NukerFP)
         .build()
     );
@@ -48,23 +49,19 @@ public class FarmMineFP extends Module {
     // --- SCRIPT ---
     private final Setting<List<String>> coordsList = sgScript.add(new StringAreaSetting.Builder()
         .name("danh-sach-toa-do")
-        .description("Định dạng: X Y Z (Mỗi dòng 1 tọa độ)")
         .defaultValue("10023 81 3581")
         .build()
     );
 
     private final Setting<Boolean> loop = sgScript.add(new BoolSetting.Builder()
         .name("lap-lai-vong")
-        .description("Tự động quay lại tọa độ đầu tiên sau khi hết danh sách.")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<Integer> scanDelay = sgScript.add(new IntSetting.Builder()
         .name("delay-quet-toa-do")
-        .description("Thời gian nghỉ (tick) trước khi check dòng tiếp theo trong script.")
         .defaultValue(10)
-        .min(0)
         .build()
     );
 
@@ -77,9 +74,7 @@ public class FarmMineFP extends Module {
 
     private final Setting<Integer> preReturnDelay = sgMining.add(new IntSetting.Builder()
         .name("delay-truoc-khi-ve")
-        .description("Nghỉ tại chỗ (Y=31) sau khi đào xong rồi mới gửi /mine (tick).")
         .defaultValue(20)
-        .min(0)
         .build()
     );
 
@@ -97,33 +92,42 @@ public class FarmMineFP extends Module {
 
     private final Setting<Integer> clickDelay = sgMining.add(new IntSetting.Builder()
         .name("delay-click-gui")
-        .description("Đợi bao nhiêu tick sau khi GUI mở rồi mới Click slot (Delay sau /mine).")
         .defaultValue(20)
-        .min(0)
         .build()
     );
 
     private final Setting<Integer> postTaskDelay = sgMining.add(new IntSetting.Builder()
         .name("delay-sau-nhiem-vu")
-        .description("Nghỉ sau khi đã Teleport về spawn để ổn định vị trí (tick).")
         .defaultValue(60)
-        .min(0)
         .build()
     );
 
-    // --- AUTO SELL (NEW GROUP) ---
+    // --- AUTO SELL ---
     private final Setting<Boolean> controlAutoSell = sgAutoSell.add(new BoolSetting.Builder()
         .name("quan-ly-autosell")
-        .description("Tự động bật/tắt AutoSellFP theo cao độ.")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<Integer> autoSellOffY = sgAutoSell.add(new IntSetting.Builder()
         .name("y-tat-autosell")
-        .description("Tắt AutoSellFP khi xuống đến cao độ này.")
         .defaultValue(40)
-        .min(-64)
+        .build()
+    );
+
+    // --- AUTO EAT (NEW) ---
+    private final Setting<Boolean> autoEatEnabled = sgAutoEat.add(new BoolSetting.Builder()
+        .name("tu-dong-an")
+        .description("Tự động bật AutoEat của Meteor khi đói sau khi teleport.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Integer> hungerThreshold = sgAutoEat.add(new IntSetting.Builder()
+        .name("nguong-doi")
+        .description("Nếu độ đói dưới mức này sẽ bắt đầu ăn.")
+        .defaultValue(16)
+        .min(1).max(20)
         .build()
     );
 
@@ -141,7 +145,7 @@ public class FarmMineFP extends Module {
     );
 
     // --- LOGIC BIẾN ---
-    private enum State { SCANNING, MOVING, MINING, WAITING_FOR_RETURN, RETURNING, WAITING_GUI_CLICK, WAITING_NEXT }
+    private enum State { SCANNING, MOVING, MINING, WAITING_FOR_RETURN, RETURNING, WAITING_GUI_CLICK, WAITING_POST_TELEPORT, CHECK_HUNGER, EATING }
     private State currentState = State.SCANNING;
     private int currentIndex = 0;
     private int timer = 0;
@@ -156,12 +160,13 @@ public class FarmMineFP extends Module {
         currentIndex = 0;
         currentState = State.SCANNING;
         timer = 0;
-        ChatUtils.info(this, "§aĐã kích hoạt FarmMineFP!");
     }
 
     @Override
     public void onDeactivate() {
         stopMovementAndMining();
+        // Đảm bảo tắt AutoEat nếu module bị tắt đột ngột
+        toggleModule(AutoEat.class, false);
     }
 
     @EventHandler
@@ -180,41 +185,35 @@ public class FarmMineFP extends Module {
             case WAITING_FOR_RETURN -> handleWaitingForReturn();
             case RETURNING -> handleReturning();
             case WAITING_GUI_CLICK -> handleWaitingGuiClick();
-            case WAITING_NEXT -> {
-                currentIndex++;
-                currentState = State.SCANNING;
-                timer = scanDelay.get();
+            case WAITING_POST_TELEPORT -> {
+                currentState = State.CHECK_HUNGER;
+                timer = 0;
             }
+            case CHECK_HUNGER -> handleCheckHunger();
+            case EATING -> handleEating();
         }
     }
 
     private void handleScanning() {
         List<String> list = coordsList.get();
-
         if (currentIndex >= list.size()) {
             if (loop.get()) {
                 currentIndex = 0;
                 ChatUtils.info(this, "§eLặp lại vòng mới... 🔄");
                 timer = postTaskDelay.get();
             } else {
-                ChatUtils.info(this, "§bXong script! Tắt module.");
                 toggle();
                 return;
             }
         }
 
         BlockPos pos = parsePos(list.get(currentIndex));
-        if (pos == null) {
-            currentIndex++;
-            return;
-        }
+        if (pos == null) { currentIndex++; return; }
 
-        Block block = mc.world.getBlockState(pos).getBlock();
-        if (whitelist.get().contains(block)) {
+        if (whitelist.get().contains(mc.world.getBlockState(pos).getBlock())) {
             currentTargetPos = pos;
             currentState = State.MOVING;
-            BlockPos movePos = pos.up();
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(movePos));
+            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(pos.up()));
         } else {
             currentIndex++;
             timer = scanDelay.get();
@@ -223,28 +222,17 @@ public class FarmMineFP extends Module {
 
     private void handleMoving() {
         if (currentTargetPos == null) return;
-        BlockPos playerPos = mc.player.getBlockPos();
-
-        if (playerPos.getX() == currentTargetPos.getX() &&
-            playerPos.getZ() == currentTargetPos.getZ() &&
-            playerPos.getY() == currentTargetPos.getY() + 1) {
-
+        BlockPos pPos = mc.player.getBlockPos();
+        if (pPos.getX() == currentTargetPos.getX() && pPos.getZ() == currentTargetPos.getZ() && pPos.getY() == currentTargetPos.getY() + 1) {
             BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
-
-            // Bật AutoSell khi đã đến tọa độ tiếp theo
             toggleAutoSell(true);
-
             setNukerState(true);
             currentState = State.MINING;
         }
     }
 
     private void handleMining() {
-        // Kiểm tra cao độ để tắt AutoSell
-        if (mc.player.getY() <= autoSellOffY.get()) {
-            toggleAutoSell(false);
-        }
-
+        if (mc.player.getY() <= autoSellOffY.get()) toggleAutoSell(false);
         if (mc.player.getBlockPos().getY() <= stopY.get()) {
             setNukerState(false);
             currentState = State.WAITING_FOR_RETURN;
@@ -260,21 +248,49 @@ public class FarmMineFP extends Module {
 
     private void handleReturning() {
         if (timer++ > 100) {
-            ChatUtils.error(this, "Không thấy GUI mở. Skip...");
-            currentState = State.WAITING_NEXT;
-            timer = postTaskDelay.get();
+            currentIndex++;
+            currentState = State.SCANNING;
         }
     }
 
     private void handleWaitingGuiClick() {
         if (mc.currentScreen instanceof GenericContainerScreen screen) {
             mc.interactionManager.clickSlot(screen.getScreenHandler().syncId, guiSlotId.get(), 0, SlotActionType.PICKUP, mc.player);
-            ChatUtils.debug(this, "§aĐã Click Slot. Chờ ổn định vị trí... 💤");
-            currentState = State.WAITING_NEXT;
+            // Sau khi click xong, đợi world load ổn định
+            currentState = State.WAITING_POST_TELEPORT;
             timer = postTaskDelay.get();
         } else {
-            currentState = State.WAITING_NEXT;
-            timer = postTaskDelay.get();
+            currentIndex++;
+            currentState = State.SCANNING;
+        }
+    }
+
+    // Logic kiểm tra đói
+    private void handleCheckHunger() {
+        if (autoEatEnabled.get() && mc.player.getHungerManager().getFoodLevel() <= hungerThreshold.get()) {
+            ChatUtils.debug(this, "§eĐói quá! Đang bật AutoEat để nạp năng lượng... 🍖");
+            toggleModule(AutoEat.class, true);
+            currentState = State.EATING;
+        } else {
+            // Không đói hoặc không bật tính năng ăn -> Đi tiếp
+            currentIndex++;
+            currentState = State.SCANNING;
+            timer = scanDelay.get();
+        }
+    }
+
+    // Đợi ăn xong
+    private void handleEating() {
+        if (mc.player.getHungerManager().getFoodLevel() > hungerThreshold.get()) {
+            toggleModule(AutoEat.class, false);
+            ChatUtils.debug(this, "§aĐã no! Cầm cúp và tiếp tục công việc. ⛏️");
+
+            // Đảm bảo cầm lại cúp
+            switchToPickaxe();
+
+            currentIndex++;
+            currentState = State.SCANNING;
+            timer = scanDelay.get();
         }
     }
 
@@ -284,10 +300,7 @@ public class FarmMineFP extends Module {
             currentState = State.WAITING_GUI_CLICK;
             timer = clickDelay.get();
         }
-
-        if (disableOnDisconnect.get() && event.screen instanceof DisconnectedScreen) {
-            if (isActive()) toggle();
-        }
+        if (disableOnDisconnect.get() && event.screen instanceof DisconnectedScreen && isActive()) toggle();
     }
 
     @EventHandler
@@ -295,17 +308,28 @@ public class FarmMineFP extends Module {
         if (disableOnLeave.get() && isActive()) toggle();
     }
 
+    // --- HELPERS ---
     private void setNukerState(boolean active) {
         Module nuker = (nukerMode.get() == NukerMode.NukerFP) ? Modules.get().get(NukerFP.class) : Modules.get().get(Nuker.class);
         if (nuker != null && nuker.isActive() != active) nuker.toggle();
     }
 
-    // Helper để bật/tắt AutoSellFP
     private void toggleAutoSell(boolean active) {
         if (!controlAutoSell.get()) return;
-        Module autoSell = Modules.get().get(AutoSellFP.class);
-        if (autoSell != null && autoSell.isActive() != active) {
-            autoSell.toggle();
+        toggleModule(AutoSellFP.class, active);
+    }
+
+    private void toggleModule(Class<? extends Module> klass, boolean active) {
+        Module m = Modules.get().get(klass);
+        if (m != null && m.isActive() != active) m.toggle();
+    }
+
+    private void switchToPickaxe() {
+        for (int i = 0; i < 9; i++) {
+            if (mc.player.getInventory().getStack(i).getItem() instanceof PickaxeItem) {
+                mc.player.getInventory().selectedSlot = i;
+                return;
+            }
         }
     }
 

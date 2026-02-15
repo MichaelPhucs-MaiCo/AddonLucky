@@ -40,7 +40,7 @@ public class AutoWarp extends Module {
     private final Setting<String> customWarpName = sgGeneral.add(new StringSetting.Builder()
         .name("custom-lenh")
         .description("Nhap ten lenh neu chon Custom.")
-        .defaultValue("chetao")
+        .defaultValue("")
         .visible(() -> warpTarget.get() == WarpTarget.Custom)
         .build()
     );

@@ -4,11 +4,11 @@ import maico.addonbuu.commands.*;
 import maico.addonbuu.commands.LogCommand.AnLogCommand;
 import maico.addonbuu.commands.LogCommand.HienLogCommand;
 import maico.addonbuu.commands.check_gui.CheckGuiCommand;
-
 import maico.addonbuu.hud.BuuHud;
 import maico.addonbuu.hud.ModHudRenderer;
 import maico.addonbuu.hud.SaveTargetHud;
-
+import maico.addonbuu.modules.logs.*;
+import maico.addonbuu.utils.SecurityUtils;
 import com.mojang.logging.LogUtils;
 import maico.addonbuu.modules.*;
 import maico.addonbuu.modules.FairyPrion.*;
@@ -18,13 +18,9 @@ import maico.addonbuu.modules.autofish.*;
 import maico.addonbuu.modules.logs.AnLog;
 import maico.addonbuu.modules.treo_pho_ban.*;
 import maico.addonbuu.utils.FileLogger;
-
-// --- Thêm các import này để xử lý GUI ---
 import maico.addonbuu.settings.StringAreaSetting;
 import maico.addonbuu.utils.quick_access_server.LobbyManager;
 import meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory;
-// ---------------------------------------
-
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
@@ -53,15 +49,27 @@ public class AddonBuu extends MeteorAddon {
 
     @Override
     public void onInitialize() {
+        // --- CHỐT CHẶN BẢO MẬT CỦA MAI CỒ ---
+        if (!SecurityUtils.isVerified()) {
+            String hwid = SecurityUtils.getHWID();
+            SecurityUtils.copyHWIDToClipboard(); // Tự động copy HWID cho khách
+
+            LOG.error("====================================================");
+            LOG.error("   ADDONBUU: MÁY CHƯA KÍCH HOẠT! ❌");
+            LOG.error("   HWID CỦA BẠN ĐÃ ĐƯỢC COPY VÀO CLIPBOARD.");
+            LOG.error("   HÃY GỬI NÓ CHO BUU ĐỂ NHẬN LICENSE.DAT");
+            LOG.error("   HWID: " + hwid);
+            LOG.error("====================================================");
+
+            // Dừng toàn bộ việc đăng ký module/command
+            return;
+        }
+
+        // --- NẾU VƯỢT QUA KIỂM TRA THÌ MỚI CHẠY TIẾP ---
         FileLogger.init();
         LobbyManager.load();
+        LOG.info("Addon Buu đã được kích hoạt thành công! Quẩy đêyyyyyy🔥");
 
-
-        LOG.info("Addon Buu đang khởi chạy...🔥");
-
-        // --- ĐĂNG KÝ STRING AREA SETTING VÀO HỆ THỐNG METEOR ---
-        // Dòng này cực kỳ quan trọng để Meteor biết cách vẽ cái box của cậu
-        maico.addonbuu.utils.quick_access_server.service.LobbyServiceSync.startService();
         SettingsWidgetFactory.registerCustomFactory(StringAreaSetting.class, (theme) -> (table, setting) -> {
             StringAreaSetting.fillTable(theme, table, (StringAreaSetting) setting);
         });
@@ -69,15 +77,13 @@ public class AddonBuu extends MeteorAddon {
         ModHudRenderer.init();
         SaveTargetHud.init();
 
-        // Modules AddonBuu
+        // Đăng ký Modules
         Modules.get().add(new TestLogModule());
         Modules.get().add(new SlotIndex());
         Modules.get().add(new TestHud());
         Modules.get().add(new SavePos());
         Modules.get().add(new SaveTarget());
         Modules.get().add(new AutoFish());
-
-        // Modules LuckyVN
         Modules.get().add(new TreoPhoBan());
         Modules.get().add(new AutoEnableDanDuoc());
         Modules.get().add(new TuCatDo());
@@ -87,8 +93,6 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new AutoClickCustom());
         Modules.get().add(new ChongTreoPhoBan());
         Modules.get().add(new TheoDoiCraft());
-
-        // FairyPrion
         Modules.get().add(new AutoSellFP());
         Modules.get().add(new NukerFP());
         Modules.get().add(new AutoWarpFP());
@@ -96,11 +100,12 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new CheckNukerFP());
         Modules.get().add(new FarmMineFP());
         Modules.get().add(new CheckDungIm());
-
-        // Module Logs
         Modules.get().add(new AnLog());
+        Modules.get().add(new PacketLogger());
+        Modules.get().add(new AutoFishHold());
 
-        // Commands
+
+        // Đăng ký Commands
         Commands.add(new AnLogCommand());
         Commands.add(new HienLogCommand());
         Commands.add(new ComponentCommand());
@@ -109,26 +114,24 @@ public class AddonBuu extends MeteorAddon {
         Commands.add(new SlotIndexCommand());
         Commands.add(new CheckGuiCommand());
 
-        // HUD
         Hud.get().register(BuuHud.INFO);
     }
 
     @Override
     public void onRegisterCategories() {
-        Modules.registerCategory(ADDONBUU);
-        Modules.registerCategory(LUCKYVN);
-        Modules.registerCategory(CLICK_SLOT_CUSTOM);
-        Modules.registerCategory(TREOPHOBAN);
-        Modules.registerCategory(FAIRY_PRISON);
+        // Chỉ đăng ký Category nếu đã vượt qua kiểm tra bảo mật (để chắc ăn 2 lớp)
+        if (SecurityUtils.isVerified()) {
+            Modules.registerCategory(ADDONBUU);
+            Modules.registerCategory(LUCKYVN);
+            Modules.registerCategory(CLICK_SLOT_CUSTOM);
+            Modules.registerCategory(TREOPHOBAN);
+            Modules.registerCategory(FAIRY_PRISON);
+        }
     }
 
     @Override
-    public String getPackage() {
-        return "maico.addonbuu";
-    }
+    public String getPackage() { return "maico.addonbuu"; }
 
     @Override
-    public GithubRepo getRepo() {
-        return new GithubRepo("Maico", "addonbuu");
-    }
+    public GithubRepo getRepo() { return new GithubRepo("Maico", "addonbuu"); }
 }
