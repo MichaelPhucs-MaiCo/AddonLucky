@@ -3,6 +3,9 @@ package maico.addonbuu.modules.auto_luckyvn;
 import maico.addonbuu.AddonBuu;
 import maico.addonbuu.utils.ChatUtils;
 import maico.addonbuu.utils.MovementController;
+// THÊM CÁC IMPORT MỚI NÈ MAI CỒ ✨
+import maico.addonbuu.modules.FairyPrion.SpamScriptFP;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -14,32 +17,30 @@ import net.minecraft.util.math.Vec3d;
 public class AutoWarp extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgScript = settings.createGroup("Script WASD");
+    // 1. TẠO GROUP MỚI CHO CÁC MODULE HẬU SCRIPT
+    private final SettingGroup sgPostScript = settings.createGroup("Post-Script Modules");
 
     public enum CmdType { Warp, Mine }
-
-    // --- THÊM ENUM MỚI---
     public enum WarpTarget { chetao, luyendan, Custom }
 
     // --- SETTINGS ---
     private final Setting<CmdType> cmdType = sgGeneral.add(new EnumSetting.Builder<CmdType>()
         .name("loai-lenh")
-        .description("Chon loai lenh muon gui: /warp hoac /mine.")
+        .description("Chọn loại lệnh muốn gửi: /warp hoặc /mine.")
         .defaultValue(CmdType.Warp)
         .build()
     );
 
-    // --- SỬA THÀNH ENUMSETTING ĐỂ CHỌN NHANH ---
     private final Setting<WarpTarget> warpTarget = sgGeneral.add(new EnumSetting.Builder<WarpTarget>()
         .name("lenh")
-        .description("Chon ten warp hoac khu mine.")
+        .description("Chọn tên warp hoặc khu mine.")
         .defaultValue(WarpTarget.chetao)
         .build()
     );
 
-    // --- Ô NHẬP TAY (CHỈ HIỆN KHI CHỌN CUSTOM) ---
     private final Setting<String> customWarpName = sgGeneral.add(new StringSetting.Builder()
         .name("custom-lenh")
-        .description("Nhap ten lenh neu chon Custom.")
+        .description("Nhập tên lệnh nếu chọn Custom.")
         .defaultValue("")
         .visible(() -> warpTarget.get() == WarpTarget.Custom)
         .build()
@@ -47,14 +48,14 @@ public class AutoWarp extends Module {
 
     private final Setting<String> targetCoords = sgGeneral.add(new StringSetting.Builder()
         .name("toa-do-check")
-        .description("Toa do XYZ de check. Neu dung dung se thuc hien lenh.")
+        .description("Tọa độ XYZ để check. Nếu đúng sẽ thực hiện lệnh.")
         .defaultValue("-1 65 1")
         .build()
     );
 
     private final Setting<Double> offset = sgGeneral.add(new DoubleSetting.Builder()
         .name("do-sai-lech")
-        .description("Do sai lech toa do check.")
+        .description("Độ sai lệch tọa độ check.")
         .defaultValue(1.0)
         .min(0.1)
         .sliderMax(10.0)
@@ -63,7 +64,7 @@ public class AutoWarp extends Module {
 
     private final Setting<Integer> postWarpDelay = sgGeneral.add(new IntSetting.Builder()
         .name("delay-sau-lenh")
-        .description("Thoi gian cho (giay) sau khi gui lenh.")
+        .description("Thời gian chờ (giây) sau khi gửi lệnh.")
         .defaultValue(5)
         .min(0)
         .max(30)
@@ -73,7 +74,15 @@ public class AutoWarp extends Module {
 
     private final Setting<Boolean> autoJump = sgGeneral.add(new BoolSetting.Builder()
         .name("auto-jump")
-        .description("Tu dong nhay muot ma truoc khi va vao block (Smart Jump).")
+        .description("Tự động nhảy mượt mà trước khi va vào block (Smart Jump).")
+        .defaultValue(true)
+        .build()
+    );
+
+    // MỤC CẬU YÊU CẦU ĐÂY: SETTING ĐỂ BẬT SPAM SCRIPT
+    private final Setting<Boolean> enableSpamScript = sgPostScript.add(new BoolSetting.Builder()
+        .name("bat-SpamScriptFP")
+        .description("Tự động kích hoạt module SpamScriptFP sau khi kết thúc Script WASD.")
         .defaultValue(true)
         .build()
     );
@@ -85,7 +94,7 @@ public class AutoWarp extends Module {
     private int timer = 0;
 
     public AutoWarp() {
-        super(AddonBuu.LUCKYVN, "auto-warp", "Module thuc thi script: Check toa do -> /warp hoac /mine -> Chay WASD 🚀");
+        super(AddonBuu.LUCKYVN, "auto-warp", "Module thực thi script: Check tọa độ -> /warp hoặc /mine -> Chạy WASD 🚀");
     }
 
     @Override
@@ -115,8 +124,6 @@ public class AutoWarp extends Module {
 
                 if (isAtTarget()) {
                     String basePrefix = cmdType.get() == CmdType.Warp ? "/warp" : "/mine";
-
-                    // --- LOGIC LẤY TÊN LỆNH MỚI ---
                     String name = (warpTarget.get() == WarpTarget.Custom) ? customWarpName.get() : warpTarget.get().name();
                     String fullCmd = name.trim().isEmpty() ? basePrefix : basePrefix + " " + name.trim();
 
@@ -143,12 +150,27 @@ public class AutoWarp extends Module {
             case RUNNING_SCRIPT -> {
                 moveControl.tick();
                 if (!moveControl.isActive()) {
-                    ChatUtils.addModMessage("§aScript kết thúc! Quay lại check tọa độ. 🔄");
-                    currentState = State.CHECKING;
-                    timer = 0;
+                    // 2. GỌI HÀM KẾT THÚC ĐỂ XỬ LÝ LOGIC MỚI
+                    finishWorkflow();
                 }
             }
         }
+    }
+
+    // 3. HÀM XỬ LÝ SAU KHI XONG SCRIPT (BẬT MODULE KHÁC VÀ LOOP)
+    private void finishWorkflow() {
+        ChatUtils.addModMessage("§6Script kết thúc! Đang kiểm tra module cần bật... 🔥");
+
+        // Tự động bật SpamScriptFP nếu option này được bật trong Settings
+        Module spamScript = Modules.get().get(SpamScriptFP.class);
+        if (enableSpamScript.get() && spamScript != null && !spamScript.isActive()) {
+            spamScript.toggle();
+        }
+
+        // Quay lại trạng thái check tọa độ để tạo thành vòng lặp
+        ChatUtils.addModMessage("§aQuay lại trạng thái chờ tọa độ. 🔄");
+        currentState = State.CHECKING;
+        timer = 0;
     }
 
     private void handleSmartAutoJump() {
