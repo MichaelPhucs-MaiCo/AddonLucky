@@ -103,6 +103,9 @@ public class AddonBuu extends MeteorAddon {
         Modules.get().add(new AnLog());
         Modules.get().add(new PacketLogger());
         Modules.get().add(new AutoFishHold());
+        Modules.get().add(new AutoClickerCS());
+        Modules.get().add(new SkillBridgeLog());
+        Modules.get().add(new RawActionBarLogger());
 
 
         // Đăng ký Commands
